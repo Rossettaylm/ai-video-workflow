@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI 漫剧生成工作流 · 全景图（2026-10）</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e6e8ee;
+    --muted: #9aa3b2;
+    --accent: #ff7a59;
+    --closed: #5aa9ff;
+    --open: #4fd1a5;
+    --gate: #ffcc4d;
+    --warn: #ff6b81;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 28px; margin: 0 0 6px; }
+  h2 { font-size: 20px; margin: 48px 0 16px; display: flex; align-items: center; gap: 10px; }
+  h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .tldr {
+    background: linear-gradient(135deg, #22262f, #1a1d24);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+  .tldr strong { color: var(--accent); }
+
+  /* toggle */
+  .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+  .toggle button {
+    background: transparent; color: var(--muted); border: 0; padding: 8px 16px; cursor: pointer; font: inherit;
+  }
+  .toggle button.on[data-mode="closed"] { background: var(--closed); color: #0b1220; }
+  .toggle button.on[data-mode="open"] { background: var(--open); color: #0b1220; }
+  .toggle button.on[data-mode="both"] { background: var(--text); color: #0b1220; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .lg-closed::before { background: var(--closed); }
+  .lg-open::before { background: var(--open); }
+  .lg-gate::before { background: var(--gate); }
+
+  /* pipeline */
+  .pipeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stage {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .stage .idx { font-size: 12px; color: var(--accent); font-weight: 600; letter-spacing: .5px; }
+  .stage h3 { margin: 0; font-size: 16px; }
+  .io { font-size: 12.5px; color: var(--muted); }
+  .io b { color: var(--text); font-weight: 500; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap;
+  }
+  .chip.c { color: var(--closed); border-color: rgba(90,169,255,.4); background: rgba(90,169,255,.08); }
+  .chip.o { color: var(--open); border-color: rgba(79,209,165,.4); background: rgba(79,209,165,.08); }
+  .chip.pick { font-weight: 700; box-shadow: 0 0 0 1px currentColor inset; }
+  .pain { font-size: 12.5px; color: #f3c1c9; border-top: 1px dashed var(--line); padding-top: 8px; margin-top: auto; }
+  .gate {
+    position: absolute; top: -10px; right: 10px;
+    background: var(--gate); color: #2a2100; font-size: 11.5px; font-weight: 700;
+    padding: 2px 8px; border-radius: 6px;
+  }
+  body[data-mode="closed"] .chip.o { opacity: .15; }
+  body[data-mode="open"] .chip.c { opacity: .15; }
+
+  .loop {
+    margin-top: 12px; text-align: center; color: var(--muted); font-size: 13px;
+    border: 1px dashed var(--line); border-radius: var(--radius); padding: 8px;
+  }
+
+  /* principle */
+  .principle { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  .card h4 { margin: 0 0 8px; font-size: 15px; }
+  .bad h4 { color: var(--warn); }
+  .good h4 { color: var(--open); }
+  .flow { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--muted); white-space: pre-wrap; margin: 0; }
+
+  /* layers */
+  .layers { display: flex; flex-direction: column; gap: 6px; }
+  .layer { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .layer .ln { font-weight: 600; }
+  .layer .ld { color: var(--muted); font-size: 13.5px; }
+  .layer:nth-child(1) { border-left: 4px solid #8b9bff; }
+  .layer:nth-child(2) { border-left: 4px solid #7aa7ff; }
+  .layer:nth-child(3) { border-left: 4px solid #5ec2e6; }
+  .layer:nth-child(4) { border-left: 4px solid #4fd1a5; }
+  .layer:nth-child(5) { border-left: 4px solid #9ad66f; }
+
+  /* table */
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: var(--radius); overflow: hidden; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--panel-2); color: var(--muted); font-weight: 600; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  td.unsolved { color: #f3c1c9; }
+
+  .compliance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .compliance .card h4 { color: var(--gate); }
+  .compliance ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; }
+
+  .avoid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .avoid .card { border-color: rgba(255,107,129,.35); }
+  .avoid .card h4 { color: var(--warn); }
+  .avoid p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+  .foot { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
+  .foot a { color: var(--closed); }
+
+  @media (max-width: 1000px) {
+    .pipeline { grid-template-columns: repeat(2, 1fr); }
+    .compliance, .avoid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 20px 14px 48px; }
+    h1 { font-size: 22px; }
+    .pipeline, .principle { grid-template-columns: 1fr; }
+    .layer { grid-template-columns: 1fr; gap: 2px; }
+    table, thead, tbody, tr, th, td { display: block; }
+    thead { display: none; }
+    tr { border-bottom: 1px solid var(--line); padding: 8px 0; }
+    td { border: 0; padding: 4px 12px; }
+    td:first-child { color: var(--accent); }
+  }
+</style>
+</head>
+<body data-mode="both">
+<div class="wrap">
+  <h1>AI 漫剧生成工作流 · 全景图</h1>
+  <p class="sub">调研日期 2026-10-19 · 详细出处见同目录 <code>ai-manju-workflow.md</code></p>
+
+  <div class="tldr">
+    <strong>一句话：</strong>主流做法不是“一句话出整剧”，而是<strong>以镜头为最小可替换单元</strong>的工业化流水线：
+    结构化剧本 → 角色/场景资产库 → 分镜关键帧 → 逐镜图生视频（3–30 秒）→ 配音/局部口型 → 剪辑合成 → 合规审核发布，
+    并保留 <strong>4 个人工闸门</strong>。
+  </div>
+
+  <h2><span class="num">01</span>八阶段流水线与代表工具</h2>
+  <div class="toggle" role="tablist">
+    <button data-mode="both" class="on">全部</button>
+    <button data-mode="closed">闭源 API MVP</button>
+    <button data-mode="open">开源自部署 MVP</button>
+  </div>
+  <div class="legend">
+    <span class="lg-closed">闭源 / API</span>
+    <span class="lg-open">开源 / 自部署</span>
+    <span class="lg-gate">人工闸门</span>
+    <span>粗体 = MVP 首选</span>
+  </div>
+
+  <div class="pipeline">
+    <div class="stage">
+      <span class="gate">闸门①剧本</span>
+      <span class="idx">STAGE 1</span>
+      <h3>选题 / IP 改编 / 剧本</h3>
+      <div class="io"><b>入</b> 小说授权文本、题材、目标集数 <b>出</b> 系列 bible、分集大纲、剧本 JSON</div>
+      <div class="tools">
+        <span class="chip c pick">DeepSeek</span><span class="chip c pick">Claude</span><span class="chip c">GPT</span><span class="chip c">豆包</span><span class="chip c">DramaBuddy</span>
+        <span class="chip o pick">Qwen / DeepSeek 权重 + vLLM</span>
+      </div>
+      <div class="pain">难点：IP 改编权链、长篇压缩、跨 50 集伏笔回收</div>
+    </div>
+
+    <div class="stage">
+      <span class="idx">STAGE 2</span>
+      <h3>分集与分镜脚本</h3>
+      <div class="io"><b>入</b> 已审剧本 <b>出</b> shots.json：镜号、景别、运镜、台词、起止状态</div>
+      <div class="tools">
+        <span class="chip c pick">LLM + JSON Schema</span><span class="chip c">小云雀 3D 导演台</span><span class="chip c">DramaBuddy</span>
+        <span class="chip o">MovieAgent / StoryAgent</span>
+      </div>
+      <div class="pain">难点：时长守恒、一镜一动作、竖屏安全区</div>
+    </div>
+
+    <div class="stage">
+      <span class="gate">闸门②资产</span>
+      <span class="idx">STAGE 3</span>
+      <h3>角色 / 场景 / 道具资产库</h3>
+      <div class="io"><b>入</b> 角色设定、风格样张 <b>出</b> 四视图、表情表、服装状态、asset ID</div>
+      <div class="tools">
+        <span class="chip c pick">Seedream 5.0 Pro</span><span class="chip c pick">FLUX.2</span><span class="chip c">Nano Banana</span><span class="chip c">GPT Image</span><span class="chip c">Midjourney</span>
+        <span class="chip o pick">IP-Adapter</span><span class="chip o">LoRA / DreamBooth</span>
+      </div>
+      <div class="pain">难点：脸/发型/体型/服装/道具五维漂移</div>
+    </div>
+
+    <div class="stage">
+      <span class="gate">闸门③分镜</span>
+      <span class="idx">STAGE 4</span>
+      <h3>分镜关键帧</h3>
+      <div class="io"><b>入</b> 镜头表 + 资产引用 <b>出</b> 每镜首帧（可选尾帧）、深度/姿态图</div>
+      <div class="tools">
+        <span class="chip c pick">Seedream</span><span class="chip c">FLUX</span><span class="chip c">Gemini</span>
+        <span class="chip o pick">ComfyUI + SDXL</span><span class="chip o">ControlNet</span>
+      </div>
+      <div class="pain">难点：多角色身份串扰、场景布局/光向漂移</div>
+    </div>
+
+    <div class="stage">
+      <span class="idx">STAGE 5</span>
+      <h3>图生视频 / 首尾帧 / 多参考</h3>
+      <div class="io"><b>入</b> 冻结关键帧 + 动作提示 <b>出</b> 逐镜 MP4 + 尾帧 + 成本记录</div>
+      <div class="tools">
+        <span class="chip c pick">Seedance 2.5</span><span class="chip c">MiniMax H3</span><span class="chip c">Vidu Q4</span><span class="chip c">Veo 3.1</span><span class="chip c">Runway Gen-4.5</span>
+        <span class="chip o pick">HunyuanVideo-1.5</span><span class="chip o">Wan2.2（80GB）</span><span class="chip o">Wan2.1 FLF2V</span>
+      </div>
+      <div class="pain">难点：动作可控、镜间连续、抽卡成本</div>
+    </div>
+
+    <div class="stage">
+      <span class="idx">STAGE 6</span>
+      <h3>配音 / 对口型</h3>
+      <div class="io"><b>入</b> 台词、音色表 <b>出</b> 逐句音频 + 时间戳、口型版特写</div>
+      <div class="tools">
+        <span class="chip c pick">MiniMax Speech</span><span class="chip c">豆包语音</span><span class="chip c">ElevenLabs</span><span class="chip c">可灵对口型</span><span class="chip c">Hedra</span>
+        <span class="chip o pick">CosyVoice</span><span class="chip o">IndexTTS</span><span class="chip o pick">LatentSync</span><span class="chip o">MuseTalk</span>
+      </div>
+      <div class="pain">难点：口型破坏身份 → 只对 20–30% 特写做口型</div>
+    </div>
+
+    <div class="stage">
+      <span class="gate">闸门④成片</span>
+      <span class="idx">STAGE 7</span>
+      <h3>音乐音效 / 剪辑 / 字幕</h3>
+      <div class="io"><b>入</b> 逐镜视频 + 音轨 <b>出</b> 9:16 成片、SRT、封面</div>
+      <div class="tools">
+        <span class="chip c">剪映 / CapCut</span><span class="chip c">Seed Audio</span>
+        <span class="chip o pick">FFmpeg</span><span class="chip o">Resolve</span>
+      </div>
+      <div class="pain">难点：多模型镜头帧率/色彩不统一、音乐商用权</div>
+    </div>
+
+    <div class="stage">
+      <span class="idx">STAGE 8</span>
+      <h3>合规审核 / 发布 / 投流</h3>
+      <div class="io"><b>入</b> 成片 + 权利文件 + AI 标识 <b>出</b> 节目编号、发布 ID、留存数据</div>
+      <div class="tools">
+        <span class="chip c">抖音 / 红果后台</span><span class="chip c">快手短剧方案</span><span class="chip c">GB 45438-2025</span>
+      </div>
+      <div class="pain">难点：国家审核 ≠ 平台合同 ≠ 投流审核，三套流程</div>
+    </div>
+  </div>
+  <div class="loop">↺ 发布数据（完播率、下一集率、付费回收）回流到 Stage 1 选题与剧本</div>
+
+  <h2><span class="num">02</span>核心原则：逐镜生产，而非一键整剧</h2>
+  <div class="principle">
+    <div class="card bad">
+      <h4>✗ 一次文生长视频</h4>
+<pre class="flow">prompt("第 1 集全部剧情")
+  → 视频模型
+  → 角色漂移 / 动作丢失 / 无法局部修
+  → 整集重抽</pre>
+    </div>
+    <div class="card good">
+      <h4>✓ 镜头为最小可替换单元</h4>
+<pre class="flow">for shot in shots.json
+  keyframe = 生成首帧(资产 ID 引用)
+  if 人审不通过 → 只重跑这一镜
+  clip = I2V(keyframe, 上一镜尾帧)
+  记录 provider / seed / 成本 / hash
+拼接 → 成片</pre>
+    </div>
+  </div>
+
+  <h2><span class="num">03</span>角色一致性的五层叠加</h2>
+  <div class="layers">
+    <div class="layer"><span class="ln">① 语义层</span><span class="ld">固定姓名、年龄、体型、发型、服装主色、标志物、禁改项（角色 bible）</span></div>
+    <div class="layer"><span class="ln">② 视觉资产层</span><span class="ld">正面 / 3/4 / 侧 / 背 / 表情表，同一造型使用不可变 asset ID</span></div>
+    <div class="layer"><span class="ln">③ 参考控制层</span><span class="ld">每张分镜显式传入角色、服装、场景、道具参考图（Seedream / FLUX.2 / IP-Adapter）</span></div>
+    <div class="layer"><span class="ln">④ 模型定制层</span><span class="ld">高频主角再训练 LoRA / DreamBooth，MVP 首版先不训练</span></div>
+    <div class="layer"><span class="ln">⑤ 时间连续层</span><span class="ld">上一镜尾帧作为下一镜首帧；StoryMem 一类关键帧记忆库</span></div>
+  </div>
+
+  <h2><span class="num">04</span>技术难点：现在能解决到哪一步</h2>
+  <table>
+    <thead><tr><th>难点</th><th>当前有效解法</th><th>仍未解决</th></tr></thead>
+    <tbody>
+      <tr><td>角色一致性</td><td>bible + 四视图 + 多参考 + 高频角色 LoRA + embedding 自动 QA</td><td class="unsolved">复杂表情、极端角度、多角色遮挡</td></tr>
+      <tr><td>场景一致性</td><td>场景母版空镜、3D 白模、深度/线稿控制</td><td class="unsolved">大幅运镜下的完整空间记忆</td></tr>
+      <tr><td>动作可控</td><td>一镜一动作、首尾状态、动作参考视频、3D 预演</td><td class="unsolved">长时复杂交互、精细手部</td></tr>
+      <tr><td>跨镜连续</td><td>尾帧承接、首尾帧、服装/场景状态机</td><td class="unsolved">多角色跨场次长程记忆</td></tr>
+      <tr><td>口型同步</td><td>先锁音频、只做特写、LatentSync / Hedra / 可灵对口型</td><td class="unsolved">大角度、遮挡、多人抢话</td></tr>
+      <tr><td>长剧情连贯</td><td>事件图、setup/payoff 表、每集状态快照</td><td class="unsolved">LLM 隐性矛盾，需人工编审</td></tr>
+      <tr><td>成本产能</td><td>低清预览 → 人选 → 高清；hash 缓存；预算上限</td><td class="unsolved">行业缺统一成本口径</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="num">05</span>合规：三条独立链路</h2>
+  <div class="compliance">
+    <div class="card">
+      <h4>AI 内容标识</h4>
+      <ul>
+        <li>起始画面显式标识，含“AI/人工智能”与“生成/合成”</li>
+        <li>字高 ≥ 最短边 5%，持续 ≥ 2 秒（GB 45438-2025）</li>
+        <li>文件元数据隐式标识，不得删改</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>微短剧审核（2026-09-01 起）</h4>
+      <ul>
+        <li>一/二/三类分类审核，无许可或节目编号不得播出</li>
+        <li>AI 制作的微短剧每集明显位置提示</li>
+        <li>首集片头或末集片尾署名编剧、导演</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>权利授权</h4>
+      <ul>
+        <li>小说改编权 + 信息网络传播权</li>
+        <li>“融像”“融声”须取得权利人明确授权</li>
+        <li>字体、音乐、模型、LoRA 许可证逐项登记</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2><span class="num">06</span>选型避坑（截至 2026-10-19）</h2>
+  <div class="avoid">
+    <div class="card"><h4>Sora 2 API：已关停</h4><p>Videos API 与 sora-2 / sora-2-pro 于 2026-09-24 下线，官方未给出替代模型。</p></div>
+    <div class="card"><h4>Kling 4.0 API：未开放</h4><p>10-15 已在产品端上线，API 仍为“即将开放”；可用于人工精修关键镜头，暂不写进自动化依赖。</p></div>
+    <div class="card"><h4>Wan2.2：显存门槛高</h4><p>官方 720P I2V 单卡命令需 ≥ 80GB 显存；单张 4090 起步选 HunyuanVideo-1.5。</p></div>
+  </div>
+
+  <p class="foot">
+    市场规模（艾媒 189.8 亿 / DataEye 168 亿，均为 2025 年）属于第三方估算且口径冲突；红果分成、即梦 Octo、快手“造梦专家 2.0”、B 站专项规则均未找到一手资料。
+    完整证据链见 <a href="ai-manju-workflow.md">ai-manju-workflow.md</a>。
+  </p>
+</div>
+<script>
+  document.querySelectorAll('.toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle button').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      document.body.dataset.mode = btn.dataset.mode;
+    });
+  });
+</script>
+</body>
+</html>
