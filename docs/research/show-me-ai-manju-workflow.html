@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI 漫剧生成工作流 · 全景图（2026-10）</title>
+<title>AI 漫剧生成工作流 · 全景图（2026-10，含新手批注）</title>
 <style>
   :root {
     --bg: #0f1115;
@@ -17,20 +17,40 @@
     --open: #4fd1a5;
     --gate: #ffcc4d;
     --warn: #ff6b81;
+    --note-bg: #fff6c9;
+    --note-ink: #3b3100;
     --radius: 12px;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 64px; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   }
-  .wrap { max-width: 1280px; margin: 0 auto; padding: 32px 20px 64px; }
-  h1 { font-size: 28px; margin: 0 0 6px; }
-  h2 { font-size: 20px; margin: 48px 0 16px; display: flex; align-items: center; gap: 10px; }
+  a { color: var(--closed); }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 96px; }
+  h1 { font-size: 28px; margin: 8px 0 6px; }
+  h2 { font-size: 20px; margin: 52px 0 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; }
-  .sub { color: var(--muted); margin: 0 0 20px; }
+  h2 .tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: var(--note-bg); color: var(--note-ink); }
+  h3 { font-size: 16px; margin: 0; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  .lead { color: var(--muted); margin: -4px 0 16px; max-width: 900px; }
+
+  /* nav */
+  nav.top {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(15,17,21,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav.top .inner { max-width: 1280px; margin: 0 auto; padding: 10px 20px; display: flex; gap: 6px; overflow-x: auto; white-space: nowrap; }
+  nav.top a { color: var(--muted); text-decoration: none; font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid transparent; }
+  nav.top a:hover { color: var(--text); border-color: var(--line); }
+  nav.top a.hl { color: var(--note-ink); background: var(--note-bg); }
+
   .tldr {
     background: linear-gradient(135deg, #22262f, #1a1d24);
     border: 1px solid var(--line);
@@ -40,11 +60,47 @@
   }
   .tldr strong { color: var(--accent); }
 
+  /* term annotations */
+  .t { border-bottom: 1px dashed rgba(255,204,77,.75); cursor: help; }
+  .chip.t { border-bottom-style: solid; }
+  body.novice-off .t { border-bottom-color: transparent; cursor: inherit; }
+  body.novice-off .chip.t { border-bottom-color: inherit; }
+  .pop {
+    position: fixed; z-index: 50; max-width: 340px; display: none;
+    background: var(--note-bg); color: var(--note-ink);
+    border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.6;
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  .pop.show { display: block; }
+  .pop .pt { font-weight: 700; font-size: 14.5px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 8px; }
+  .pop .pt small { font-weight: 600; opacity: .6; font-size: 11.5px; }
+  .pop .pa { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(59,49,0,.25); }
+  .pop .pa b { font-weight: 700; }
+
+  /* sticky notes */
+  .note {
+    background: var(--note-bg); color: var(--note-ink);
+    border-radius: 8px; padding: 8px 10px; font-size: 12.8px; line-height: 1.55;
+    position: relative;
+  }
+  .note::before {
+    content: "新手批注"; display: inline-block; font-size: 11px; font-weight: 700;
+    background: var(--note-ink); color: var(--note-bg); padding: 0 6px; border-radius: 4px; margin-right: 6px;
+  }
+  .note.block { padding: 12px 14px; font-size: 13.5px; margin: 12px 0; }
+  body.novice-off .note { display: none; }
+
+  .fab {
+    position: fixed; right: 18px; bottom: 18px; z-index: 30;
+    background: var(--note-bg); color: var(--note-ink); border: 0; border-radius: 999px;
+    padding: 10px 16px; font: 600 13.5px/1 inherit; cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  }
+  body.novice-off .fab { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+
   /* toggle */
   .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
-  .toggle button {
-    background: transparent; color: var(--muted); border: 0; padding: 8px 16px; cursor: pointer; font: inherit;
-  }
+  .toggle button { background: transparent; color: var(--muted); border: 0; padding: 8px 16px; cursor: pointer; font: inherit; }
   .toggle button.on[data-mode="closed"] { background: var(--closed); color: #0b1220; }
   .toggle button.on[data-mode="open"] { background: var(--open); color: #0b1220; }
   .toggle button.on[data-mode="both"] { background: var(--text); color: #0b1220; }
@@ -54,49 +110,64 @@
   .lg-closed::before { background: var(--closed); }
   .lg-open::before { background: var(--open); }
   .lg-gate::before { background: var(--gate); }
+  .lg-note::before { background: var(--note-bg); }
 
   /* pipeline */
   .pipeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
   .stage {
-    position: relative;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 14px 14px 12px;
-    display: flex; flex-direction: column; gap: 8px;
+    position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 8px;
   }
   .stage .idx { font-size: 12px; color: var(--accent); font-weight: 600; letter-spacing: .5px; }
-  .stage h3 { margin: 0; font-size: 16px; }
   .io { font-size: 12.5px; color: var(--muted); }
   .io b { color: var(--text); font-weight: 500; }
   .tools { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
-    font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap;
-  }
+  .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
   .chip.c { color: var(--closed); border-color: rgba(90,169,255,.4); background: rgba(90,169,255,.08); }
   .chip.o { color: var(--open); border-color: rgba(79,209,165,.4); background: rgba(79,209,165,.08); }
   .chip.pick { font-weight: 700; box-shadow: 0 0 0 1px currentColor inset; }
   .pain { font-size: 12.5px; color: #f3c1c9; border-top: 1px dashed var(--line); padding-top: 8px; margin-top: auto; }
-  .gate {
-    position: absolute; top: -10px; right: 10px;
-    background: var(--gate); color: #2a2100; font-size: 11.5px; font-weight: 700;
-    padding: 2px 8px; border-radius: 6px;
-  }
+  .gate { position: absolute; top: -10px; right: 10px; background: var(--gate); color: #2a2100; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
   body[data-mode="closed"] .chip.o { opacity: .15; }
   body[data-mode="open"] .chip.c { opacity: .15; }
+  .loop { margin-top: 12px; text-align: center; color: var(--muted); font-size: 13px; border: 1px dashed var(--line); border-radius: var(--radius); padding: 8px; }
 
-  .loop {
-    margin-top: 12px; text-align: center; color: var(--muted); font-size: 13px;
-    border: 1px dashed var(--line); border-radius: var(--radius); padding: 8px;
-  }
-
-  /* principle */
-  .principle { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
   .card h4 { margin: 0 0 8px; font-size: 15px; }
+  .card p { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; }
+  .card p:last-child { margin-bottom: 0; }
+  .card ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; }
   .bad h4 { color: var(--warn); }
   .good h4 { color: var(--open); }
   .flow { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--muted); white-space: pre-wrap; margin: 0; }
+
+  /* crew table */
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: var(--radius); overflow: hidden; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--panel-2); color: var(--muted); font-weight: 600; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  td.unsolved { color: #f3c1c9; }
+  td .k { color: var(--accent); font-weight: 600; }
+
+  /* episode anatomy */
+  .anatomy { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  .ep-bar { display: flex; gap: 3px; margin: 10px 0 6px; height: 44px; }
+  .ep-bar div { background: linear-gradient(180deg, #2c3442, #232a36); border: 1px solid #3a4352; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); min-width: 0; overflow: hidden; }
+  .ep-bar div.hl { background: linear-gradient(180deg, #ff7a59, #d85a3a); color: #fff; border-color: #ff9b80; font-weight: 700; }
+  .ep-scale { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); }
+  .shot-zoom { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  .shot-zoom .z { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 13px; }
+  .shot-zoom .z b { display: block; color: var(--accent); font-size: 12px; margin-bottom: 2px; }
+
+  /* shot sizes */
+  .sizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 760px; }
+  .size { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; text-align: center; font-size: 12.5px; color: var(--muted); }
+  .size .frame { aspect-ratio: 9 / 16; background: linear-gradient(180deg, #1a2130 0%, #11151c 70%, #1b1f27 70%); border: 1px solid #333b48; border-radius: 6px; margin-bottom: 8px; position: relative; overflow: hidden; }
+  .size .fig { position: absolute; left: 50%; transform: translateX(-50%); width: auto; fill: var(--accent); }
+  .size b { color: var(--text); display: block; font-size: 13.5px; }
 
   /* layers */
   .layers { display: flex; flex-direction: column; gap: 6px; }
@@ -109,133 +180,249 @@
   .layer:nth-child(4) { border-left: 4px solid #4fd1a5; }
   .layer:nth-child(5) { border-left: 4px solid #9ad66f; }
 
-  /* table */
-  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: var(--radius); overflow: hidden; font-size: 13.5px; }
-  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { background: var(--panel-2); color: var(--muted); font-weight: 600; }
-  td:first-child { font-weight: 600; white-space: nowrap; }
-  td.unsolved { color: #f3c1c9; }
-
-  .compliance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .compliance .card h4 { color: var(--gate); }
-  .compliance ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; }
-
-  .avoid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .avoid .card { border-color: rgba(255,107,129,.35); }
   .avoid .card h4 { color: var(--warn); }
-  .avoid p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+  /* workbuddy */
+  .wb-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .wb-hero .card.big h4 { font-size: 17px; }
+  .bridge { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13.5px; }
+  .bridge .box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+  .bridge .box.wb { border-color: rgba(255,204,77,.6); color: var(--gate); }
+  .bridge .box.gen { border-color: rgba(90,169,255,.6); color: var(--closed); }
+  .bridge .arrow { color: var(--muted); }
+
+  .ladder { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .rung { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+  .rung .lv { font-size: 12px; font-weight: 700; letter-spacing: .5px; }
+  .rung:nth-child(1) .lv { color: #9ad66f; }
+  .rung:nth-child(2) .lv { color: #5ec2e6; }
+  .rung:nth-child(3) .lv { color: var(--gate); }
+  .rung:nth-child(4) .lv { color: var(--accent); }
+  .rung.rec { border-color: rgba(255,204,77,.7); box-shadow: 0 0 0 1px rgba(255,204,77,.35) inset; }
+  .rung.rec::after { content: "推荐起点"; position: absolute; top: -10px; right: 10px; background: var(--gate); color: #2a2100; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .rung dl { margin: 0; font-size: 13px; }
+  .rung dt { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .rung dd { margin: 0; }
+  .rung .flowline { font-size: 12.5px; color: var(--muted); background: var(--panel-2); border-radius: 8px; padding: 8px; }
+
+  .days { display: flex; flex-direction: column; gap: 10px; }
+  .day { display: grid; grid-template-columns: 88px 1fr; gap: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+  .day .dn { font-weight: 700; color: var(--accent); }
+  .day .dn small { display: block; color: var(--muted); font-weight: 500; font-size: 12px; }
+  .day p { margin: 0 0 6px; font-size: 13.5px; }
+  .day .where { font-size: 12.5px; color: var(--muted); }
+  .prompt { position: relative; margin-top: 8px; }
+  .prompt pre {
+    margin: 0; background: #0b0d11; border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; font: 12.8px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: #d6dae3;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .prompt button {
+    position: absolute; top: 8px; right: 8px; background: var(--panel-2); color: var(--muted);
+    border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; font: 12px inherit; cursor: pointer;
+  }
+  .prompt button.ok { color: var(--open); border-color: var(--open); }
+
+  /* glossary */
+  .gsearch { width: 100%; max-width: 420px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; margin-bottom: 14px; }
+  .gcats { display: flex; flex-direction: column; gap: 22px; }
+  .gcat h3 { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+  .glist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .gitem { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+  .gitem b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .gitem .ga { color: var(--muted); margin-top: 4px; font-size: 12.5px; }
 
   .foot { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
-  .foot a { color: var(--closed); }
+  .src { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
 
   @media (max-width: 1000px) {
-    .pipeline { grid-template-columns: repeat(2, 1fr); }
-    .compliance, .avoid { grid-template-columns: 1fr; }
+    .pipeline, .ladder, .grid4 { grid-template-columns: repeat(2, 1fr); }
+    .grid3, .glist { grid-template-columns: 1fr 1fr; }
+    .shot-zoom { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 640px) {
-    .wrap { padding: 20px 14px 48px; }
+    .wrap { padding: 16px 14px 96px; }
     h1 { font-size: 22px; }
-    .pipeline, .principle { grid-template-columns: 1fr; }
-    .layer { grid-template-columns: 1fr; gap: 2px; }
+    h2 { display: block; }
+    h2 .num { margin-right: 8px; }
+    h2 .tag { margin-left: 6px; vertical-align: 2px; }
+    .pipeline, .grid2, .grid3, .grid4, .ladder, .wb-hero, .glist { grid-template-columns: 1fr; }
+    .sizes { grid-template-columns: repeat(3, 1fr); }
+    .layer, .day { grid-template-columns: 1fr; gap: 4px; }
     table, thead, tbody, tr, th, td { display: block; }
     thead { display: none; }
     tr { border-bottom: 1px solid var(--line); padding: 8px 0; }
     td { border: 0; padding: 4px 12px; }
     td:first-child { color: var(--accent); }
+    .ep-bar div { font-size: 0; }
   }
 </style>
 </head>
 <body data-mode="both">
+
+<nav class="top"><div class="inner">
+  <a href="#s00" class="hl">00 零基础导读</a>
+  <a href="#s01">01 八阶段流水线</a>
+  <a href="#s02">02 逐镜原则</a>
+  <a href="#s03">03 角色一致性</a>
+  <a href="#s04">04 技术难点</a>
+  <a href="#s05">05 合规</a>
+  <a href="#s06">06 选型避坑</a>
+  <a href="#s07" class="hl">07 从 WorkBuddy 出发</a>
+  <a href="#s08" class="hl">08 术语表</a>
+</div></nav>
+
 <div class="wrap">
   <h1>AI 漫剧生成工作流 · 全景图</h1>
-  <p class="sub">调研日期 2026-10-19 · 详细出处见同目录 <code>ai-manju-workflow.md</code></p>
+  <p class="sub">调研日期 2026-10-19 · 详细出处见同目录 <code>ai-manju-workflow.md</code> · 页面里带<span class="t" data-t="虚线标注">黄色虚线</span>的词，鼠标悬停或手指点一下就能看到解释</p>
 
   <div class="tldr">
-    <strong>一句话：</strong>主流做法不是“一句话出整剧”，而是<strong>以镜头为最小可替换单元</strong>的工业化流水线：
-    结构化剧本 → 角色/场景资产库 → 分镜关键帧 → 逐镜图生视频（3–30 秒）→ 配音/局部口型 → 剪辑合成 → 合规审核发布，
-    并保留 <strong>4 个人工闸门</strong>。
+    <strong>一句话：</strong>主流做法不是“一句话出整剧”，而是<strong>以<span class="t" data-t="镜头">镜头</span>为最小可替换单元</strong>的工业化流水线：
+    结构化<span class="t" data-t="剧本">剧本</span> → 角色/场景<span class="t" data-t="资产">资产库</span> → <span class="t" data-t="分镜">分镜</span><span class="t" data-t="关键帧">关键帧</span> → 逐镜<span class="t" data-t="图生视频">图生视频</span>（3–30 秒）→ 配音/局部<span class="t" data-t="对口型">口型</span> → 剪辑合成 → 合规审核发布，
+    并保留 <strong>4 个<span class="t" data-t="人工闸门">人工闸门</span></strong>。
   </div>
 
-  <h2><span class="num">01</span>八阶段流水线与代表工具</h2>
+  <!-- ========== 00 ========== -->
+  <h2 id="s00"><span class="num">00</span>零基础导读：把做漫剧想成“开一个剧组”<span class="tag">新手专区</span></h2>
+  <p class="lead">没有影视经验也不用怕：传统剧组里每个岗位做的事，AI 工作流里一样都不能少，只是从“人来做”变成了“人指挥 AI 做、人来验收”。先记住下面这张对照表，后面每个阶段都能对上号。</p>
+
+  <table>
+    <thead><tr><th>传统剧组岗位</th><th>他们做什么</th><th>AI 工作流里对应</th><th>人仍然要做的</th></tr></thead>
+    <tbody>
+      <tr><td>编剧</td><td>写故事、写台词</td><td><span class="k">阶段 1</span> 大模型写<span class="t" data-t="剧本">剧本</span></td><td>定题材、判断好不好看、把关版权</td></tr>
+      <tr><td>导演 / 分镜师</td><td>决定每个画面怎么拍、拍多久</td><td><span class="k">阶段 2</span> 大模型拆<span class="t" data-t="分镜">分镜表</span></td><td>检查镜头是否连贯、节奏是否拖沓</td></tr>
+      <tr><td>美术 / 选角 / 服装</td><td>确定角色长相、服装、场景样子</td><td><span class="k">阶段 3</span> 生图模型出<span class="t" data-t="三视图">角色标准图</span></td><td>挑出“这就是主角”的那一版并锁定</td></tr>
+      <tr><td>摄影师</td><td>构图、按下快门</td><td><span class="k">阶段 4–5</span> 先出<span class="t" data-t="关键帧">关键帧</span>，再<span class="t" data-t="图生视频">让它动起来</span></td><td>挑片、决定哪一镜要重做（<span class="t" data-t="抽卡">抽卡</span>）</td></tr>
+      <tr><td>配音演员</td><td>给角色说台词</td><td><span class="k">阶段 6</span> <span class="t" data-t="TTS">TTS</span> 合成语音</td><td>选音色、确认读音和情绪</td></tr>
+      <tr><td>剪辑师 / 录音师</td><td>拼接画面、配乐、字幕</td><td><span class="k">阶段 7</span> 剪映 / FFmpeg</td><td>决定节奏、最终听感</td></tr>
+      <tr><td>制片 / 发行</td><td>管钱、拿审批、上线推广</td><td><span class="k">阶段 8</span> 平台后台 + 数据</td><td>办审核、看<span class="t" data-t="完播率">完播率</span>、决定是否<span class="t" data-t="投流">投流</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="margin-top:32px;font-size:17px">一集漫剧有多“大”？</h2>
+  <div class="anatomy">
+    <p class="lead" style="margin:0">以本调研建议的入门尺寸为例（不是行业标准）：1 集 60–90 秒 ≈ 10–18 个<span class="t" data-t="镜头">镜头</span>，每个镜头 3–8 秒。下面这条就是一集，橙色那格放大看：</p>
+    <div class="ep-bar" aria-label="一集拆成 14 个镜头示意">
+      <div style="flex:5">镜1</div><div style="flex:4">镜2</div><div style="flex:6">镜3</div><div style="flex:3">镜4</div><div class="hl" style="flex:5">镜5</div><div style="flex:7">镜6</div><div style="flex:4">镜7</div><div style="flex:5">镜8</div><div style="flex:3">镜9</div><div style="flex:6">镜10</div><div style="flex:4">镜11</div><div style="flex:5">镜12</div><div style="flex:8">镜13</div><div style="flex:5">镜14</div>
+    </div>
+    <div class="ep-scale"><span>0 秒</span><span>约 70 秒</span></div>
+    <div class="shot-zoom">
+      <div class="z"><b>1 张关键帧</b>这个镜头开头的静态画面，先把它画对</div>
+      <div class="z"><b>1 段 5 秒视频</b>把关键帧交给视频模型“动起来”</div>
+      <div class="z"><b>0–2 句台词</b>TTS 生成配音，必要时对口型</div>
+      <div class="z"><b>1 行分镜表记录</b><span class="t" data-t="景别">景别</span>、<span class="t" data-t="运镜">运镜</span>、动作、起止画面</div>
+    </div>
+    <div class="note block">所以“做一集漫剧”在 AI 时代的真实工作量是：<b>十几次画图 + 十几次生成视频 + 一次剪辑</b>，而不是“让 AI 一次生成 70 秒”。某个镜头不满意，只重做那一格。</div>
+  </div>
+
+  <h2 style="margin-top:32px;font-size:17px">看懂分镜表的第一个词：<span class="t" data-t="景别">景别</span></h2>
+  <div class="sizes">
+    <div class="size"><div class="frame"><svg class="fig" style="height:16%;top:60%" viewBox="0 0 40 100"><use href="#person"/></svg></div><b>远景</b>交代环境，人很小</div>
+    <div class="size"><div class="frame"><svg class="fig" style="height:80%;top:12%" viewBox="0 0 40 100"><use href="#person"/></svg></div><b>全景</b>人物全身</div>
+    <div class="size"><div class="frame"><svg class="fig" style="height:150%;top:12%" viewBox="0 0 40 100"><use href="#person"/></svg></div><b>中景</b>腰部以上</div>
+    <div class="size"><div class="frame"><svg class="fig" style="height:235%;top:10%" viewBox="0 0 40 100"><use href="#person"/></svg></div><b>近景</b>胸部以上</div>
+    <div class="size"><div class="frame"><svg class="fig" style="height:430%;top:6%" viewBox="0 0 40 100"><use href="#person"/></svg></div><b>特写</b>只看脸或物件</div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g id="person"><circle cx="20" cy="10" r="8"/><rect x="17" y="17" width="6" height="4"/><path d="M9 21h22a3 3 0 0 1 3 3v32H6V24a3 3 0 0 1 3-3z"/><rect x="2" y="23" width="5" height="30" rx="2.5"/><rect x="33" y="23" width="5" height="30" rx="2.5"/><rect x="10" y="56" width="8" height="44" rx="3"/><rect x="22" y="56" width="8" height="44" rx="3"/></g></defs></svg>
+  </div>
+  <div class="note block">竖屏 9:16 画面窄，漫剧以<b>中景、近景</b>为主；远景人物太小、在手机上看不清。越近的景别越强调情绪，也越需要<span class="t" data-t="对口型">对口型</span>。</div>
+
+  <h2 style="margin-top:32px;font-size:17px">新手最容易混淆的三组概念</h2>
+  <div class="grid3">
+    <div class="card"><h4>剧本 ≠ 分镜</h4><p><b>剧本</b>写“发生了什么、谁说了什么”，像小说。</p><p><b>分镜</b>写“观众看到什么画面”，是一张表格，每行一个镜头，带时长、景别、运镜。AI 画图和生成视频吃的是分镜，不是剧本。</p></div>
+    <div class="card"><h4>关键帧 ≠ 视频</h4><p><b>关键帧</b>是一张静态图，便宜、快、容易修改。</p><p><b>视频</b>是让这张图动起来的几秒片段，贵、慢、改不动。所以流程上永远是<b>先把图定稿，再生成视频</b>。</p></div>
+    <div class="card"><h4>IP ≠ IP-Adapter</h4><p><b>IP</b>在影视圈指原著版权，比如一部网文小说，改编前要买授权。</p><p><b>IP-Adapter</b>是一个 AI 技术名，这里的 IP 是 Image Prompt（图像提示），用来让模型参考一张图画角色。两者毫无关系。</p></div>
+  </div>
+
+  <!-- ========== 01 ========== -->
+  <h2 id="s01"><span class="num">01</span>八阶段流水线与代表工具</h2>
   <div class="toggle" role="tablist">
     <button data-mode="both" class="on">全部</button>
     <button data-mode="closed">闭源 API MVP</button>
     <button data-mode="open">开源自部署 MVP</button>
   </div>
   <div class="legend">
-    <span class="lg-closed">闭源 / API</span>
-    <span class="lg-open">开源 / 自部署</span>
-    <span class="lg-gate">人工闸门</span>
-    <span>粗体 = MVP 首选</span>
+    <span class="lg-closed"><span class="t" data-t="闭源">闭源</span> / <span class="t" data-t="API">API</span></span>
+    <span class="lg-open"><span class="t" data-t="开源">开源</span> / <span class="t" data-t="自部署">自部署</span></span>
+    <span class="lg-gate"><span class="t" data-t="人工闸门">人工闸门</span></span>
+    <span class="lg-note">新手批注</span>
+    <span>粗体 = <span class="t" data-t="MVP">MVP</span> 首选 · 工具名也可以点开看介绍</span>
   </div>
 
   <div class="pipeline">
     <div class="stage">
       <span class="gate">闸门①剧本</span>
       <span class="idx">STAGE 1</span>
-      <h3>选题 / IP 改编 / 剧本</h3>
-      <div class="io"><b>入</b> 小说授权文本、题材、目标集数 <b>出</b> 系列 bible、分集大纲、剧本 JSON</div>
+      <h3>选题 / <span class="t" data-t="IP">IP</span> 改编 / <span class="t" data-t="剧本">剧本</span></h3>
+      <div class="io"><b>入</b> 小说授权文本、题材、目标集数 <b>出</b> <span class="t" data-t="系列 bible">系列 bible</span>、分集大纲、剧本 <span class="t" data-t="JSON">JSON</span></div>
       <div class="tools">
-        <span class="chip c pick">DeepSeek</span><span class="chip c pick">Claude</span><span class="chip c">GPT</span><span class="chip c">豆包</span><span class="chip c">DramaBuddy</span>
-        <span class="chip o pick">Qwen / DeepSeek 权重 + vLLM</span>
+        <span class="chip c pick t" data-t="DeepSeek">DeepSeek</span><span class="chip c pick t" data-t="Claude">Claude</span><span class="chip c t" data-t="GPT">GPT</span><span class="chip c t" data-t="豆包">豆包</span><span class="chip c t" data-t="DramaBuddy">DramaBuddy</span>
+        <span class="chip o pick t" data-t="开源权重">Qwen / DeepSeek 权重 + vLLM</span>
       </div>
+      <div class="note">相当于<b>编剧</b>。新手做法：让 AI 按固定格式写人物设定和前 3 集大纲，外貌要写到发型、服装颜色这种能画出来的程度。</div>
       <div class="pain">难点：IP 改编权链、长篇压缩、跨 50 集伏笔回收</div>
     </div>
 
     <div class="stage">
       <span class="idx">STAGE 2</span>
-      <h3>分集与分镜脚本</h3>
-      <div class="io"><b>入</b> 已审剧本 <b>出</b> shots.json：镜号、景别、运镜、台词、起止状态</div>
+      <h3>分集与<span class="t" data-t="分镜">分镜</span>脚本</h3>
+      <div class="io"><b>入</b> 已审剧本 <b>出</b> shots.json：<span class="t" data-t="镜头">镜号</span>、<span class="t" data-t="景别">景别</span>、<span class="t" data-t="运镜">运镜</span>、台词、<span class="t" data-t="首尾帧">起止状态</span></div>
       <div class="tools">
-        <span class="chip c pick">LLM + JSON Schema</span><span class="chip c">小云雀 3D 导演台</span><span class="chip c">DramaBuddy</span>
-        <span class="chip o">MovieAgent / StoryAgent</span>
+        <span class="chip c pick t" data-t="JSON Schema">LLM + JSON Schema</span><span class="chip c t" data-t="小云雀">小云雀 3D 导演台</span><span class="chip c t" data-t="DramaBuddy">DramaBuddy</span>
+        <span class="chip o t" data-t="MovieAgent">MovieAgent / StoryAgent</span>
       </div>
-      <div class="pain">难点：时长守恒、一镜一动作、竖屏安全区</div>
+      <div class="note">相当于<b>导演画分镜</b>。把一集拆成 10–18 行的表格，每行一个镜头、只写一个动作。这张表是后面所有画图、生成视频的“施工图纸”。</div>
+      <div class="pain">难点：<span class="t" data-t="时长守恒">时长守恒</span>、一镜一动作、<span class="t" data-t="安全区">竖屏安全区</span></div>
     </div>
 
     <div class="stage">
       <span class="gate">闸门②资产</span>
       <span class="idx">STAGE 3</span>
-      <h3>角色 / 场景 / 道具资产库</h3>
-      <div class="io"><b>入</b> 角色设定、风格样张 <b>出</b> 四视图、表情表、服装状态、asset ID</div>
+      <h3>角色 / 场景 / 道具<span class="t" data-t="资产">资产库</span></h3>
+      <div class="io"><b>入</b> 角色设定、风格样张 <b>出</b> <span class="t" data-t="三视图">四视图</span>、表情表、服装状态、<span class="t" data-t="asset ID">asset ID</span></div>
       <div class="tools">
-        <span class="chip c pick">Seedream 5.0 Pro</span><span class="chip c pick">FLUX.2</span><span class="chip c">Nano Banana</span><span class="chip c">GPT Image</span><span class="chip c">Midjourney</span>
-        <span class="chip o pick">IP-Adapter</span><span class="chip o">LoRA / DreamBooth</span>
+        <span class="chip c pick t" data-t="Seedream">Seedream 5.0 Pro</span><span class="chip c pick t" data-t="FLUX">FLUX.2</span><span class="chip c t" data-t="Nano Banana">Nano Banana</span><span class="chip c t" data-t="GPT Image">GPT Image</span><span class="chip c t" data-t="Midjourney">Midjourney</span>
+        <span class="chip o pick t" data-t="IP-Adapter">IP-Adapter</span><span class="chip o t" data-t="LoRA">LoRA / DreamBooth</span>
       </div>
+      <div class="note">相当于<b>选角 + 定妆照</b>。给每个主角定一套正面、侧面、背面的“标准照”，以后每张画面都拿它当参考，主角才不会换脸。</div>
       <div class="pain">难点：脸/发型/体型/服装/道具五维漂移</div>
     </div>
 
     <div class="stage">
       <span class="gate">闸门③分镜</span>
       <span class="idx">STAGE 4</span>
-      <h3>分镜关键帧</h3>
-      <div class="io"><b>入</b> 镜头表 + 资产引用 <b>出</b> 每镜首帧（可选尾帧）、深度/姿态图</div>
+      <h3>分镜<span class="t" data-t="关键帧">关键帧</span></h3>
+      <div class="io"><b>入</b> 镜头表 + 资产引用 <b>出</b> 每镜<span class="t" data-t="首尾帧">首帧（可选尾帧）</span>、<span class="t" data-t="深度图">深度/姿态图</span></div>
       <div class="tools">
-        <span class="chip c pick">Seedream</span><span class="chip c">FLUX</span><span class="chip c">Gemini</span>
-        <span class="chip o pick">ComfyUI + SDXL</span><span class="chip o">ControlNet</span>
+        <span class="chip c pick t" data-t="Seedream">Seedream</span><span class="chip c t" data-t="FLUX">FLUX</span><span class="chip c t" data-t="Nano Banana">Gemini</span>
+        <span class="chip o pick t" data-t="ComfyUI">ComfyUI + SDXL</span><span class="chip o t" data-t="ControlNet">ControlNet</span>
       </div>
-      <div class="pain">难点：多角色身份串扰、场景布局/光向漂移</div>
+      <div class="note">相当于<b>摄影师构图</b>。每个镜头先出一张静态图，满意再进下一步。图便宜视频贵，在这一步多挑几次最省钱。</div>
+      <div class="pain">难点：多角色身份串扰、<span class="t" data-t="场景母版">场景布局</span>/光向漂移</div>
     </div>
 
     <div class="stage">
       <span class="idx">STAGE 5</span>
-      <h3>图生视频 / 首尾帧 / 多参考</h3>
-      <div class="io"><b>入</b> 冻结关键帧 + 动作提示 <b>出</b> 逐镜 MP4 + 尾帧 + 成本记录</div>
+      <h3><span class="t" data-t="图生视频">图生视频</span> / <span class="t" data-t="首尾帧">首尾帧</span> / <span class="t" data-t="多参考">多参考</span></h3>
+      <div class="io"><b>入</b> 冻结关键帧 + 动作<span class="t" data-t="提示词">提示词</span> <b>出</b> 逐镜 MP4 + 尾帧 + 成本记录</div>
       <div class="tools">
-        <span class="chip c pick">Seedance 2.5</span><span class="chip c">MiniMax H3</span><span class="chip c">Vidu Q4</span><span class="chip c">Veo 3.1</span><span class="chip c">Runway Gen-4.5</span>
-        <span class="chip o pick">HunyuanVideo-1.5</span><span class="chip o">Wan2.2（80GB）</span><span class="chip o">Wan2.1 FLF2V</span>
+        <span class="chip c pick t" data-t="Seedance">Seedance 2.5</span><span class="chip c t" data-t="MiniMax">MiniMax H3</span><span class="chip c t" data-t="Vidu">Vidu Q4</span><span class="chip c t" data-t="Veo">Veo 3.1</span><span class="chip c t" data-t="Runway">Runway Gen-4.5</span>
+        <span class="chip o pick t" data-t="HunyuanVideo">HunyuanVideo-1.5</span><span class="chip o t" data-t="Wan">Wan2.2（80GB）</span><span class="chip o t" data-t="FLF2V">Wan2.1 FLF2V</span>
       </div>
-      <div class="pain">难点：动作可控、镜间连续、抽卡成本</div>
+      <div class="note">相当于<b>实拍</b>。把定稿的图交给视频模型，生成 3–8 秒的小片段。不满意就只重做这一镜，并记下花了多少钱。</div>
+      <div class="pain">难点：动作可控、<span class="t" data-t="跨镜连续">镜间连续</span>、<span class="t" data-t="抽卡">抽卡</span>成本</div>
     </div>
 
     <div class="stage">
       <span class="idx">STAGE 6</span>
-      <h3>配音 / 对口型</h3>
-      <div class="io"><b>入</b> 台词、音色表 <b>出</b> 逐句音频 + 时间戳、口型版特写</div>
+      <h3>配音 / <span class="t" data-t="对口型">对口型</span></h3>
+      <div class="io"><b>入</b> 台词、<span class="t" data-t="音色克隆">音色表</span> <b>出</b> 逐句音频 + 时间戳、口型版特写</div>
       <div class="tools">
-        <span class="chip c pick">MiniMax Speech</span><span class="chip c">豆包语音</span><span class="chip c">ElevenLabs</span><span class="chip c">可灵对口型</span><span class="chip c">Hedra</span>
-        <span class="chip o pick">CosyVoice</span><span class="chip o">IndexTTS</span><span class="chip o pick">LatentSync</span><span class="chip o">MuseTalk</span>
+        <span class="chip c pick t" data-t="MiniMax Speech">MiniMax Speech</span><span class="chip c t" data-t="豆包语音">豆包语音</span><span class="chip c t" data-t="ElevenLabs">ElevenLabs</span><span class="chip c t" data-t="可灵">可灵对口型</span><span class="chip c t" data-t="Hedra">Hedra</span>
+        <span class="chip o pick t" data-t="CosyVoice">CosyVoice</span><span class="chip o t" data-t="IndexTTS">IndexTTS</span><span class="chip o pick t" data-t="LatentSync">LatentSync</span><span class="chip o t" data-t="MuseTalk">MuseTalk</span>
       </div>
+      <div class="note">相当于<b>配音演员</b>。先把配音做完，按配音的真实长度调整镜头时长；只给正脸近景、特写对口型，背影和旁白不用。</div>
       <div class="pain">难点：口型破坏身份 → 只对 20–30% 特写做口型</div>
     </div>
 
@@ -243,28 +430,31 @@
       <span class="gate">闸门④成片</span>
       <span class="idx">STAGE 7</span>
       <h3>音乐音效 / 剪辑 / 字幕</h3>
-      <div class="io"><b>入</b> 逐镜视频 + 音轨 <b>出</b> 9:16 成片、SRT、封面</div>
+      <div class="io"><b>入</b> 逐镜视频 + 音轨 <b>出</b> <span class="t" data-t="9:16">9:16</span> 成片、<span class="t" data-t="SRT">SRT</span>、封面</div>
       <div class="tools">
-        <span class="chip c">剪映 / CapCut</span><span class="chip c">Seed Audio</span>
-        <span class="chip o pick">FFmpeg</span><span class="chip o">Resolve</span>
+        <span class="chip c t" data-t="剪映">剪映 / CapCut</span><span class="chip c t" data-t="Seed Audio">Seed Audio</span>
+        <span class="chip o pick t" data-t="FFmpeg">FFmpeg</span><span class="chip o t" data-t="Resolve">Resolve</span>
       </div>
+      <div class="note">相当于<b>剪辑师</b>。新手直接用剪映：拼片段、自动识别字幕、加背景音乐、片头加“AI 生成”标识。</div>
       <div class="pain">难点：多模型镜头帧率/色彩不统一、音乐商用权</div>
     </div>
 
     <div class="stage">
       <span class="idx">STAGE 8</span>
-      <h3>合规审核 / 发布 / 投流</h3>
-      <div class="io"><b>入</b> 成片 + 权利文件 + AI 标识 <b>出</b> 节目编号、发布 ID、留存数据</div>
+      <h3>合规审核 / 发布 / <span class="t" data-t="投流">投流</span></h3>
+      <div class="io"><b>入</b> 成片 + 权利文件 + <span class="t" data-t="显式标识">AI 标识</span> <b>出</b> <span class="t" data-t="节目编号">节目编号</span>、发布 ID、留存数据</div>
       <div class="tools">
-        <span class="chip c">抖音 / 红果后台</span><span class="chip c">快手短剧方案</span><span class="chip c">GB 45438-2025</span>
+        <span class="chip c t" data-t="抖音红果">抖音 / 红果后台</span><span class="chip c t" data-t="快手短剧">快手短剧方案</span><span class="chip c t" data-t="GB 45438">GB 45438-2025</span>
       </div>
+      <div class="note">相当于<b>发行</b>。上线前要有审核编号和 AI 标识；上线后看<span class="t" data-t="完播率">完播率</span>和<span class="t" data-t="下一集率">下一集率</span>，决定下一集怎么改。</div>
       <div class="pain">难点：国家审核 ≠ 平台合同 ≠ 投流审核，三套流程</div>
     </div>
   </div>
   <div class="loop">↺ 发布数据（完播率、下一集率、付费回收）回流到 Stage 1 选题与剧本</div>
 
-  <h2><span class="num">02</span>核心原则：逐镜生产，而非一键整剧</h2>
-  <div class="principle">
+  <!-- ========== 02 ========== -->
+  <h2 id="s02"><span class="num">02</span>核心原则：逐镜生产，而非一键整剧</h2>
+  <div class="grid2">
     <div class="card bad">
       <h4>✗ 一次文生长视频</h4>
 <pre class="flow">prompt("第 1 集全部剧情")
@@ -282,44 +472,49 @@
 拼接 → 成片</pre>
     </div>
   </div>
+  <div class="note block">右边这段像代码，但意思很简单：<b>按分镜表一行一行做</b>。每行先画图，人看过没问题再生成视频；把这一镜的尾帧当成下一镜的起点，画面就能接上。“seed / hash”是记账用的编号（见<a href="#s08">术语表</a>），方便以后复现或查花费。</div>
 
-  <h2><span class="num">03</span>角色一致性的五层叠加</h2>
+  <!-- ========== 03 ========== -->
+  <h2 id="s03"><span class="num">03</span>角色一致性的五层叠加</h2>
   <div class="layers">
-    <div class="layer"><span class="ln">① 语义层</span><span class="ld">固定姓名、年龄、体型、发型、服装主色、标志物、禁改项（角色 bible）</span></div>
-    <div class="layer"><span class="ln">② 视觉资产层</span><span class="ld">正面 / 3/4 / 侧 / 背 / 表情表，同一造型使用不可变 asset ID</span></div>
-    <div class="layer"><span class="ln">③ 参考控制层</span><span class="ld">每张分镜显式传入角色、服装、场景、道具参考图（Seedream / FLUX.2 / IP-Adapter）</span></div>
-    <div class="layer"><span class="ln">④ 模型定制层</span><span class="ld">高频主角再训练 LoRA / DreamBooth，MVP 首版先不训练</span></div>
+    <div class="layer"><span class="ln">① 语义层</span><span class="ld">固定姓名、年龄、体型、发型、服装主色、标志物、禁改项（<span class="t" data-t="系列 bible">角色 bible</span>）</span></div>
+    <div class="layer"><span class="ln">② 视觉资产层</span><span class="ld">正面 / 3/4 / 侧 / 背 / 表情表，同一造型使用不可变 <span class="t" data-t="asset ID">asset ID</span></span></div>
+    <div class="layer"><span class="ln">③ 参考控制层</span><span class="ld">每张分镜显式传入角色、服装、场景、道具<span class="t" data-t="多参考">参考图</span>（Seedream / FLUX.2 / <span class="t" data-t="IP-Adapter">IP-Adapter</span>）</span></div>
+    <div class="layer"><span class="ln">④ 模型定制层</span><span class="ld">高频主角再训练 <span class="t" data-t="LoRA">LoRA</span> / DreamBooth，MVP 首版先不训练</span></div>
     <div class="layer"><span class="ln">⑤ 时间连续层</span><span class="ld">上一镜尾帧作为下一镜首帧；StoryMem 一类关键帧记忆库</span></div>
   </div>
+  <div class="note block">“一致性”就是<b>主角在第 1 镜和第 100 镜看起来是同一个人</b>。新手只需要做好前三层：写清外貌关键词 → 定一套标准照 → 每次画图都把标准照作为参考图传进去。第四层要训练模型，等真的做成长剧再考虑。</div>
 
-  <h2><span class="num">04</span>技术难点：现在能解决到哪一步</h2>
+  <!-- ========== 04 ========== -->
+  <h2 id="s04"><span class="num">04</span>技术难点：现在能解决到哪一步</h2>
   <table>
     <thead><tr><th>难点</th><th>当前有效解法</th><th>仍未解决</th></tr></thead>
     <tbody>
-      <tr><td>角色一致性</td><td>bible + 四视图 + 多参考 + 高频角色 LoRA + embedding 自动 QA</td><td class="unsolved">复杂表情、极端角度、多角色遮挡</td></tr>
-      <tr><td>场景一致性</td><td>场景母版空镜、3D 白模、深度/线稿控制</td><td class="unsolved">大幅运镜下的完整空间记忆</td></tr>
+      <tr><td>角色一致性</td><td>bible + 四视图 + 多参考 + 高频角色 LoRA + <span class="t" data-t="embedding">embedding</span> 自动 QA</td><td class="unsolved">复杂表情、极端角度、多角色遮挡</td></tr>
+      <tr><td>场景一致性</td><td><span class="t" data-t="场景母版">场景母版空镜</span>、<span class="t" data-t="白模">3D 白模</span>、深度/线稿控制</td><td class="unsolved">大幅运镜下的完整空间记忆</td></tr>
       <tr><td>动作可控</td><td>一镜一动作、首尾状态、动作参考视频、3D 预演</td><td class="unsolved">长时复杂交互、精细手部</td></tr>
-      <tr><td>跨镜连续</td><td>尾帧承接、首尾帧、服装/场景状态机</td><td class="unsolved">多角色跨场次长程记忆</td></tr>
+      <tr><td><span class="t" data-t="跨镜连续">跨镜连续</span></td><td>尾帧承接、首尾帧、服装/场景状态机</td><td class="unsolved">多角色跨场次长程记忆</td></tr>
       <tr><td>口型同步</td><td>先锁音频、只做特写、LatentSync / Hedra / 可灵对口型</td><td class="unsolved">大角度、遮挡、多人抢话</td></tr>
-      <tr><td>长剧情连贯</td><td>事件图、setup/payoff 表、每集状态快照</td><td class="unsolved">LLM 隐性矛盾，需人工编审</td></tr>
-      <tr><td>成本产能</td><td>低清预览 → 人选 → 高清；hash 缓存；预算上限</td><td class="unsolved">行业缺统一成本口径</td></tr>
+      <tr><td>长剧情连贯</td><td>事件图、<span class="t" data-t="setup/payoff">setup/payoff 表</span>、每集状态快照</td><td class="unsolved">LLM 隐性矛盾，需人工编审</td></tr>
+      <tr><td>成本产能</td><td>低清预览 → 人选 → 高清；<span class="t" data-t="hash">hash</span> 缓存；预算上限</td><td class="unsolved">行业缺统一成本口径</td></tr>
     </tbody>
   </table>
 
-  <h2><span class="num">05</span>合规：三条独立链路</h2>
-  <div class="compliance">
+  <!-- ========== 05 ========== -->
+  <h2 id="s05"><span class="num">05</span>合规：三条独立链路</h2>
+  <div class="grid3 compliance">
     <div class="card">
       <h4>AI 内容标识</h4>
       <ul>
-        <li>起始画面显式标识，含“AI/人工智能”与“生成/合成”</li>
-        <li>字高 ≥ 最短边 5%，持续 ≥ 2 秒（GB 45438-2025）</li>
-        <li>文件元数据隐式标识，不得删改</li>
+        <li>起始画面<span class="t" data-t="显式标识">显式标识</span>，含“AI/人工智能”与“生成/合成”</li>
+        <li>字高 ≥ 最短边 5%，持续 ≥ 2 秒（<span class="t" data-t="GB 45438">GB 45438-2025</span>）</li>
+        <li>文件元数据<span class="t" data-t="隐式标识">隐式标识</span>，不得删改</li>
       </ul>
     </div>
     <div class="card">
       <h4>微短剧审核（2026-09-01 起）</h4>
       <ul>
-        <li>一/二/三类分类审核，无许可或节目编号不得播出</li>
+        <li>一/二/三类分类审核，无许可或<span class="t" data-t="节目编号">节目编号</span>不得播出</li>
         <li>AI 制作的微短剧每集明显位置提示</li>
         <li>首集片头或末集片尾署名编剧、导演</li>
       </ul>
@@ -327,33 +522,423 @@
     <div class="card">
       <h4>权利授权</h4>
       <ul>
-        <li>小说改编权 + 信息网络传播权</li>
-        <li>“融像”“融声”须取得权利人明确授权</li>
+        <li>小说<span class="t" data-t="改编权">改编权</span> + <span class="t" data-t="信息网络传播权">信息网络传播权</span></li>
+        <li>“<span class="t" data-t="融像融声">融像”“融声</span>”须取得权利人明确授权</li>
         <li>字体、音乐、模型、LoRA 许可证逐项登记</li>
       </ul>
     </div>
   </div>
+  <div class="note block">算一下“5%”有多大：竖屏 1080×1920 的最短边是 1080 像素，所以“AI 生成”这几个字至少 <b>54 像素高</b>，并且在片头显示至少 <b>2 秒</b>。剪映里加一个文字贴纸就能做到。不要用别人的小说、明星的脸或声音，哪怕只是练手发出去也有风险。</div>
 
-  <h2><span class="num">06</span>选型避坑（截至 2026-10-19）</h2>
-  <div class="avoid">
+  <!-- ========== 06 ========== -->
+  <h2 id="s06"><span class="num">06</span>选型避坑（截至 2026-10-19）</h2>
+  <div class="grid3 avoid">
     <div class="card"><h4>Sora 2 API：已关停</h4><p>Videos API 与 sora-2 / sora-2-pro 于 2026-09-24 下线，官方未给出替代模型。</p></div>
     <div class="card"><h4>Kling 4.0 API：未开放</h4><p>10-15 已在产品端上线，API 仍为“即将开放”；可用于人工精修关键镜头，暂不写进自动化依赖。</p></div>
-    <div class="card"><h4>Wan2.2：显存门槛高</h4><p>官方 720P I2V 单卡命令需 ≥ 80GB 显存；单张 4090 起步选 HunyuanVideo-1.5。</p></div>
+    <div class="card"><h4>Wan2.2：<span class="t" data-t="显存">显存</span>门槛高</h4><p>官方 720P I2V 单卡命令需 ≥ 80GB 显存；单张 4090 起步选 HunyuanVideo-1.5。</p></div>
   </div>
+
+  <!-- ========== 07 ========== -->
+  <h2 id="s07"><span class="num">07</span>只用过 WorkBuddy？从你熟悉的东西出发<span class="tag">新手专区</span></h2>
+  <p class="lead">WorkBuddy 是腾讯的桌面 AI 智能体工作台：你用一句话下任务，它会拆步骤、调用工具、读写本地文件，最后交付结果。这套“说需求 → 拆步骤 → 调工具 → 交文件”的模式，就是漫剧流水线的骨架，你已经会了一半。</p>
+
+  <div class="wb-hero">
+    <div class="card big">
+      <h4>你已经会的</h4>
+      <p>用自然语言描述任务；让它产出文档、表格；调用“专家”和 Skill；授权它读写某个文件夹；把长任务交给云端助理。</p>
+      <p>这些能力直接覆盖了漫剧的<b>阶段 1–2（剧本、分镜表）</b>、阶段 7 的整理工作，以及全流程的<b>项目文件管理</b>。</p>
+    </div>
+    <div class="card big">
+      <h4>你还缺的一块</h4>
+      <p><b>WorkBuddy 是“指挥台”，不是“摄影棚”。</b>高质量的角色图和视频片段来自外部生成模型（即梦 / Seedance、可灵、Vidu 等），需要单独的账号、积分或 API 额度。</p>
+      <div class="bridge" style="margin-top:8px">
+        <span class="box wb">WorkBuddy 写剧本、分镜、提示词</span><span class="arrow">→</span>
+        <span class="box gen">生图 / 视频模型出画面</span><span class="arrow">→</span>
+        <span class="box">剪映合成</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:32px;font-size:17px">WorkBuddy 概念 ↔ 漫剧工作流对照</h2>
+  <table>
+    <thead><tr><th>WorkBuddy 里你熟悉的</th><th>在漫剧工作流里对应</th><th>具体怎么用</th></tr></thead>
+    <tbody>
+      <tr><td>专家</td><td>编剧、分镜师等“岗位”</td><td>WorkBuddy 支持上传岗位说明书、标准流程和知识库自建专家：把“分镜表模板 + 题材规范”喂进去，做一个“漫剧分镜专家”</td></tr>
+      <tr><td><span class="t" data-t="Skill">Skill（技能）</span></td><td>封装好的生产步骤</td><td>Drama Skills：11 个技能，覆盖原著分析、剧本、分镜、提示词、审查和剪辑；WorkRally：腾讯的漫剧生图、生视频、画布工具集</td></tr>
+      <tr><td>连接器 / <span class="t" data-t="MCP">MCP</span></td><td>连上外部生成服务</td><td>可灵已提供 MCP 和 CLI，智能体可以调用 Kling 4.0 的全能参考、关键帧生视频；WorkRally 可透传调用其 MCP Server 的全部工具</td></tr>
+      <tr><td>本地文件读写</td><td>项目文件夹 = 唯一<span class="t" data-t="事实源">事实源</span></td><td>固定目录：<code>剧本.md</code>、<code>分镜.xlsx</code>、<code>assets/角色/</code>、<code>clips/</code>。每次让它生成都“读取某文件”，而不是靠聊天记录</td></tr>
+      <tr><td>云端助理（7×24）</td><td>长时间批量任务</td><td>官方说明关闭客户端后任务仍在云端继续，适合整理大批素材、批量改写提示词</td></tr>
+      <tr><td>项目空间 · 多 Agent</td><td>并行生产 + 团队复用</td><td>多个 Agent 分别负责不同集或不同角色；调好的专家、Skill、连接器沉淀到项目空间给同事复用</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="margin-top:32px;font-size:17px">四级台阶：从纯手工到自建流水线</h2>
+  <div class="ladder">
+    <div class="rung rec">
+      <span class="lv">L0 · 手工接力</span>
+      <h3>WorkBuddy 写，网页工具画</h3>
+      <div class="flowline">WorkBuddy 出剧本和分镜表 → 逐条复制提示词到即梦 / 可灵网页 → 下载 → 剪映拼接</div>
+      <dl>
+        <dt>需要会</dt><dd>复制粘贴、用剪映</dd>
+        <dt>得到</dt><dd>亲手走一遍 8 个阶段，知道每一步卡在哪</dd>
+        <dt>升级信号</dt><dd>单集超过 15 镜时复制粘贴变成瓶颈；主角开始“换脸”</dd>
+      </dl>
+    </div>
+    <div class="rung">
+      <span class="lv">L1 · 一站式平台</span>
+      <h3>交给现成的漫剧平台</h3>
+      <div class="flowline">小云雀 / 阿里云漫剧工坊 / 阅文 DramaBuddy：剧本、角色、分镜、视频、拼接都在一个网页里</div>
+      <dl>
+        <dt>需要会</dt><dd>注册、按界面操作</dd>
+        <dt>得到</dt><dd>最快出片</dd>
+        <dt>代价</dt><dd>中间产物难导出、被平台绑定；想换模型或批量改动时受限</dd>
+      </dl>
+    </div>
+    <div class="rung">
+      <span class="lv">L2 · WorkBuddy + Skill 半自动</span>
+      <h3>让智能体帮你调用生成服务</h3>
+      <div class="flowline">在技能市场装 WorkRally，或上传 Drama Skills 技能包 → 智能体按分镜批量写提示词、预览确认后提交生成</div>
+      <dl>
+        <dt>需要会</dt><dd>安装 Skill、配置生成服务账号或 <span class="t" data-t="API">API key</span>；Drama Skills 还要求本机有 Python 3.9+ 和 ffmpeg</dd>
+        <dt>得到</dt><dd>批量、可追踪、可重跑</dd>
+        <dt>注意</dt><dd>Drama Skills 官方适配 Claude Code、Codex 等支持 Agent Skill 规范的环境；WorkBuddy 也支持上传同类技能包，但<b>本次未实测导入效果</b></dd>
+      </dl>
+    </div>
+    <div class="rung">
+      <span class="lv">L3 · 自建流水线</span>
+      <h3>脚本或 ComfyUI 全掌控</h3>
+      <div class="flowline">Cursor / Claude Code / Codex 写脚本直接调 API；或 <span class="t" data-t="ComfyUI">ComfyUI</span> + 开源模型在自己的显卡上跑</div>
+      <dl>
+        <dt>需要会</dt><dd>读懂一点代码，或愿意让 AI 帮你写；开源方案需要显卡</dd>
+        <dt>得到</dt><dd>成本、数据、模型选择完全可控</dd>
+        <dt>适合</dt><dd>确定要长期、批量做剧之后</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="note block">建议路线：<b>先用 L0 完整做出 1 集</b>，弄清楚每个阶段的输入输出；然后按痛点二选一：想省事就走 L1，想保留控制权就走 L2。不要一上来就搭 L3，你还不知道自己需要什么。</div>
+
+  <h2 style="margin-top:32px;font-size:17px">第一周上手清单（L0 路线，可直接复制提示词）</h2>
+  <div class="days">
+    <div class="day">
+      <div class="dn">Day 1<small>剧本</small></div>
+      <div>
+        <p>在 WorkBuddy 里新建项目并授权一个文件夹，生成系列设定和前 3 集大纲。</p>
+        <div class="where">工具：WorkBuddy · 对应阶段 1 · <b>人工闸门①</b>：读一遍，不好看就让它重写</div>
+        <div class="prompt"><button type="button">复制</button><pre>你是竖屏短剧编剧。请为一部 AI 漫剧写系列设定，题材：【在这里写题材，例如：古风复仇】。
+要求：
+1. 保存到本地文件 series_bible.md
+2. 包含：一句话卖点、世界观（200 字内）、3 个主要角色（姓名、年龄、性格、口头禅、与主角关系）
+3. 每个角色写一行“外貌关键词”，具体到发型、发色、服装主色、标志性道具，后面画图要原样使用
+4. 写前 3 集大纲，每集 60–90 秒，第一句台词就要抓人，每集结尾留一个悬念</pre></div>
+      </div>
+    </div>
+    <div class="day">
+      <div class="dn">Day 2<small>分镜表</small></div>
+      <div>
+        <p>把第 1 集拆成分镜表，再让它自己检查一遍。</p>
+        <div class="where">工具：WorkBuddy · 对应阶段 2</div>
+        <div class="prompt"><button type="button">复制</button><pre>读取 series_bible.md，把第 1 集拆成分镜表，保存为 ep01_shots.xlsx。
+每行一个镜头，共 10–18 行，列为：
+镜号 | 时长(秒,3–8) | 景别(远景/全景/中景/近景/特写) | 运镜 | 出场角色 | 场景 | 开始画面 | 动作(只写一个) | 结束画面 | 台词 | 画面提示词 | 视频提示词
+规则：
+- 所有时长加起来在 60–90 秒
+- 同一镜头最多 2 个角色，以中景、近景为主
+- 画面提示词里必须原样带上出场角色的外貌关键词
+- 上一镜的结束画面要能接上下一镜的开始画面</pre></div>
+        <div class="prompt"><button type="button">复制</button><pre>对照 series_bible.md 检查 ep01_shots.xlsx：
+1. 总时长是否在 60–90 秒
+2. 每个画面提示词是否包含对应角色的外貌关键词
+3. 前后镜头的结束画面和开始画面是否接得上（服装、道具、位置）
+把问题列成清单，先不要改文件，等我确认。</pre></div>
+      </div>
+    </div>
+    <div class="day">
+      <div class="dn">Day 3<small>角色定妆</small></div>
+      <div>
+        <p>在即梦（或其他生图工具）里给每个主角出标准四视图，挑一张最满意的保存到 <code>assets/角色/</code>。</p>
+        <div class="where">工具：即梦 / Seedream · 对应阶段 3 · <b>人工闸门②</b>：这张图就是主角的“身份证”，以后不再改</div>
+        <div class="prompt"><button type="button">复制</button><pre>角色设定图，同一角色的正面、四分之三侧面、侧面、背面四个全身站立视图，纯白背景，
+【粘贴 series_bible.md 里的外貌关键词，例如：18 岁少女，黑色高马尾，白色交领长袍，腰间红色剑穗】，
+日系动漫风格，线条干净，四个视图横向排列，比例一致</pre></div>
+      </div>
+    </div>
+    <div class="day">
+      <div class="dn">Day 4<small>关键帧</small></div>
+      <div>
+        <p>按分镜表逐行生成每个镜头的首帧：上传角色标准图作为参考，粘贴“画面提示词”，比例选 9:16。每镜出 2–4 张候选，挑一张。</p>
+        <div class="where">工具：即梦 / Seedream 参考图生图 · 对应阶段 4 · <b>人工闸门③</b>：全部首帧过一遍再进入视频，图不对视频一定不对</div>
+      </div>
+    </div>
+    <div class="day">
+      <div class="dn">Day 5<small>生成视频</small></div>
+      <div>
+        <p>把每张首帧上传到即梦或可灵的“图生视频”，粘贴“视频提示词”，时长按分镜表选。每镜最多重试 3 次，在表格里新加一列记录花了多少积分。</p>
+        <div class="where">工具：即梦 / 可灵网页 · 对应阶段 5</div>
+      </div>
+    </div>
+    <div class="day">
+      <div class="dn">Day 6<small>配音 + 剪辑</small></div>
+      <div>
+        <p>在剪映里导入全部片段按镜号排列；用剪映的文本朗读或豆包语音生成台词配音；自动识别字幕后人工校对；片头加“本内容由 AI 生成”文字，字高至少 54 像素、显示至少 2 秒。</p>
+        <div class="where">工具：剪映 · 对应阶段 6–7 · <b>人工闸门④</b>：完整看一遍成片</div>
+      </div>
+    </div>
+    <div class="day">
+      <div class="dn">Day 7<small>复盘</small></div>
+      <div>
+        <p>让 WorkBuddy 读取分镜表里的记录，统计：角色走样的镜头数、平均每镜重试次数、总花费、哪一步最耗时间。这份复盘决定你下一步走 L1 还是 L2。</p>
+        <div class="where">工具：WorkBuddy</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:32px;font-size:17px">用 WorkBuddy 做漫剧时的四个提醒</h2>
+  <div class="grid4">
+    <div class="card"><h4>第三方 Skill 先看再装</h4><p>WorkBuddy 官方文档提示：非官方 Skill 可能存在提示词注入、越权访问、后门等风险，还可能把输入发给第三方。优先用官方推荐，装之前看权限和脚本。</p></div>
+    <div class="card"><h4>API key 不进项目文件</h4><p>API key 等于钱包钥匙。不要写进剧本、分镜表或会分享的文件夹；Drama Skills 也是这么设计的：供应商凭据不进入项目。</p></div>
+    <div class="card"><h4>先预览，再花钱</h4><p>生图、生视频都按次计费。让智能体先把这一批的提示词、数量、参数列出来给你看，你确认后再提交，这是 Drama Skills 的核心做法。</p></div>
+    <div class="card"><h4>积分会比想象中消耗得快</h4><p>WorkBuddy 官方提示复杂任务和复杂 Skill 积分消耗较高；视频模型同样按秒或按次计费。从 1 集、10 个镜头起步，先算清单镜成本。</p></div>
+  </div>
+  <p class="src">
+    本节来源：
+    <a href="https://cloud.tencent.com/product/workbuddy">WorkBuddy 产品页</a> ·
+    <a href="https://cloud.tencent.com/document/product/1831/134329">WorkBuddy Enterprise 产品概述</a> ·
+    <a href="https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market">WorkBuddy 技能文档</a> ·
+    <a href="https://github.com/zenstory-ai/drama-skills">Drama Skills README</a> ·
+    <a href="https://github.com/Tencent/workrally">WorkRally README</a> ·
+    <a href="https://ir.kuaishou.com/zh-hans/news-releases/news-release-details/kelingaixinyidaimoxingklin1g-40zhengshishangxian/">Kling 4.0 公告（MCP/CLI）</a>。
+    Drama Skills 宣称其 68 秒样片视频生成成本约 40 元，属项目方自报。
+  </p>
+
+  <!-- ========== 08 ========== -->
+  <h2 id="s08"><span class="num">08</span>术语表<span class="tag">新手专区</span></h2>
+  <p class="lead">页面里所有黄色虚线词的完整解释都在这里，可以搜索。</p>
+  <input class="gsearch" type="search" placeholder="搜索术语，例如：分镜、LoRA、抽卡" aria-label="搜索术语" />
+  <div class="gcats" id="glossary"></div>
 
   <p class="foot">
     市场规模（艾媒 189.8 亿 / DataEye 168 亿，均为 2025 年）属于第三方估算且口径冲突；红果分成、即梦 Octo、快手“造梦专家 2.0”、B 站专项规则均未找到一手资料。
     完整证据链见 <a href="ai-manju-workflow.md">ai-manju-workflow.md</a>。
   </p>
 </div>
+
+<button class="fab" type="button" aria-pressed="true">新手批注：开</button>
+<div class="pop" role="tooltip"></div>
+
 <script>
-  document.querySelectorAll('.toggle button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.toggle button').forEach(b => b.classList.remove('on'));
-      btn.classList.add('on');
-      document.body.dataset.mode = btn.dataset.mode;
-    });
+const CATS = {
+  film: '影视基础',
+  ai: 'AI 技术',
+  eng: '工程与协作',
+  tool: '工具与模型',
+  pub: '发行与合规'
+};
+
+const G = {
+  '虚线标注': { c: 'eng', p: '带黄色虚线的词都有解释。电脑上鼠标悬停，手机上点一下；右下角按钮可以关掉全部新手批注。' },
+
+  '剧本': { c: 'film', p: '写清楚“发生了什么、谁说了什么”的文字稿，像小说加台词。', a: '在 AI 流程里，剧本最好让 AI 按固定格式输出（比如表格或 JSON），方便后面自动拆分镜。' },
+  '分镜': { c: 'film', p: '把剧本拆成一格一格的画面计划，每格写清拍什么、怎么拍、拍多长。', a: '<b>比喻：</b>漫画的分格，或者盖房子前的施工图纸。AI 画图和生成视频吃的是分镜，不是剧本。' },
+  '镜头': { c: 'film', p: '摄影机一次连续拍下、中间没有剪断的一段画面。镜号是它的编号，例如 EP001-SC03-SH05 = 第 1 集第 3 场第 5 个镜头。', a: '在 AI 漫剧里，一个镜头 ≈ 一张关键帧 + 一段 3–8 秒视频，是可以单独重做的最小单位。' },
+  '景别': { c: 'film', p: '画面里人物占多大：远景（环境）、全景（全身）、中景（腰以上）、近景（胸以上）、特写（脸或物件）。', a: '越近越强调情绪。竖屏漫剧以中景、近景为主。' },
+  '运镜': { c: 'film', p: '摄影机怎么动：推（靠近）、拉（远离）、摇（原地转头）、移（平移）、跟（跟着人走）、升降。', a: 'AI 视频里没有真摄影机，要把运镜用文字写进提示词，例如“镜头缓慢推近”。' },
+  '关键帧': { c: 'film', p: '一个镜头里最重要的那张静态画面。AI 流程里通常指视频的第一张图。', a: '先把这张图画对再让它动起来：图便宜、好改，视频贵、难改。' },
+  '首尾帧': { c: 'film', p: '首帧是视频第一张画面，尾帧是最后一张。同时给出首帧和尾帧，AI 会补出中间的动作过程。', a: '<b>比喻：</b>告诉 AI 起点和终点，让它自己补路线。分镜表里的“开始画面 / 结束画面”就是为此准备的。' },
+  '跨镜连续': { c: 'film', p: '前后两个镜头之间，人物的衣服、道具、位置要对得上。对不上就叫“穿帮”。', a: '<b>例子：</b>上一镜剑在右手，下一镜变成左手。常用解法是把上一镜的尾帧当作下一镜的首帧。' },
+  '三视图': { c: 'film', p: '同一个角色的正面、侧面、背面标准图（四视图再加 3/4 侧面）。动画行业用它保证所有画师画得一样。', a: 'AI 流程里把它当参考图喂给模型，是保持“主角不换脸”最重要的素材。' },
+  '系列 bible': { c: 'film', p: '“设定圣经”：写死世界观、角色外貌、性格、口头禅、人物关系的设定文档。', a: '后面每一步生成都以它为准。外貌要写成能直接贴进提示词的关键词。' },
+  '场景母版': { c: 'film', p: '某个场景没有人物时的标准图（也叫空镜）。后续发生在这里的镜头都以它为基准。', a: '能保证同一个房间的门窗、家具、光线方向不会每个镜头都变。' },
+  '白模': { c: 'film', p: '没有贴颜色和材质的灰色 3D 模型，用来先排演人物站位、动作和镜头角度。', a: '<b>比喻：</b>话剧正式演出前的走位彩排。小云雀的 3D 导演台就是这种用法。' },
+  '对口型': { c: 'film', p: '让画面里角色嘴巴的动作和台词声音对上（lip sync）。', a: '口型模型可能把脸改得不像，所以只给正脸近景和特写做，背影、旁白不做。' },
+  'SRT': { c: 'film', p: '最常见的字幕文件格式：纯文本，每句字幕带开始和结束时间。剪映可以导入导出。' },
+  '9:16': { c: 'film', p: '竖屏画面比例，宽 9 高 16，例如 1080×1920 像素。抖音、快手、红果都以它为主。' },
+  '安全区': { c: 'film', p: '手机播放时，屏幕底部和右侧会被标题、点赞、评论按钮挡住。人脸和字幕要放在不被挡住的区域。', a: '各平台尺寸不同，以上传端提示为准。' },
+  '时长守恒': { c: 'film', p: '分镜表里所有镜头时长加起来，必须等于这一集的目标时长。', a: '台词时长要用配音生成后的真实长度回填，不能只按字数估。' },
+  'setup/payoff': { c: 'film', p: '“埋伏笔 / 回收伏笔”对照表：第几集埋了什么线索，第几集要揭晓。', a: '大模型写长剧很容易忘记之前埋的线索，用表格追踪最可靠。' },
+
+  '提示词': { c: 'ai', p: '你给 AI 的文字指令（prompt）。画面提示词描述“画什么”，视频提示词描述“怎么动”。' },
+  'JSON': { c: 'ai', p: '一种程序容易读取的结构化数据格式，用大括号和“字段: 值”表示。', a: '对新手来说，把它理解成“表格的另一种写法”即可，Excel 表也能起到同样作用。' },
+  'JSON Schema': { c: 'ai', p: '给 JSON 规定字段和格式的“模板”，强制大模型按模板输出。', a: '<b>比喻：</b>让 AI 填表，而不是写作文。填出来的表程序可以直接读取、检查。' },
+  '图生视频': { c: 'ai', p: '给 AI 一张图片加一段描述，生成以这张图为起点的短视频（Image-to-Video，简称 I2V）。', a: '相对的是文生视频（T2V），只给文字。漫剧更常用图生视频，因为先把图定稿更可控。' },
+  '多参考': { c: 'ai', p: '生成时同时给模型多张参考图（角色、服装、场景、道具），让它综合起来画。', a: '参考越多不一定越好，角色太多容易“串脸”，官方通常建议 1–5 个主体。' },
+  'LoRA': { c: 'ai', p: '用少量图片对模型做小规模“补课”，让它记住某个角色或画风。产物是一个可插拔的小文件。', a: '<b>比喻：</b>给模型配一副专门认这个角色的眼镜。需要训练，入门阶段先不用。' },
+  'IP-Adapter': { c: 'ai', p: '不用训练，直接把一张参考图作为条件交给模型，让它照着画。', a: '注意：这里的 IP 是 Image Prompt（图像提示），和影视圈说的 IP（版权）无关。' },
+  'ControlNet': { c: 'ai', p: '用姿态骨架、深度图、线稿等“辅助图”约束 AI 的构图和人物姿势。' },
+  '深度图': { c: 'ai', p: '用黑白深浅表示远近的辅助图；姿态图则用火柴人骨架表示人物动作。都用来告诉 AI 画面结构。' },
+  'embedding': { c: 'ai', p: '把图片或文字转换成一串数字，数字越接近，内容越相似。', a: '可以用来自动检查“这一镜的主角和标准照像不像”，不像就提醒人工复核。' },
+  '抽卡': { c: 'ai', p: 'AI 每次生成都有随机性，同样的输入跑多次再挑最好的一版，像游戏抽卡。', a: '漫剧的主要成本就在抽卡次数。先低清多抽、选中后再高清生成，最省钱。' },
+  'TTS': { c: 'ai', p: 'Text-to-Speech，文字转语音，也就是 AI 配音。' },
+  '音色克隆': { c: 'ai', p: '用一段真人录音让 AI 学会这个人的声音。', a: '必须取得声音主人的明确授权。为每个角色固定一个音色 ID，全剧不换。' },
+  '显存': { c: 'ai', p: '显卡上的内存，决定能在本机跑多大的模型。', a: '消费级 RTX 4090 是 24GB；80GB 属于数据中心级显卡，个人一般没有。' },
+  'MCP': { c: 'ai', p: '让 AI 智能体调用外部工具的统一“插头标准”（Model Context Protocol）。', a: 'WorkBuddy 支持 MCP 生态；可灵 Kling 4.0 也提供了 MCP，智能体可以直接调用它生成视频。' },
+  'Skill': { c: 'ai', p: '技能包：把一组脚本和工作流程打包，让智能体在你授权后完成具体动作。核心是一个 SKILL.md 说明文件。', a: 'WorkBuddy、Claude Code、Codex 等都支持这种格式。Drama Skills、WorkRally 就是做漫剧的 Skill。' },
+
+  '资产': { c: 'eng', p: '生产中反复使用的素材：角色标准图、场景母版、道具图、音色等。', a: '资产库就是把这些素材集中存放、编号、标注“已确认”的地方。' },
+  'asset ID': { c: 'eng', p: '给每个素材一个固定编号，例如 char_hero_v1。', a: '一旦确认就不修改；要改造型就新建 v2。分镜表里写编号，而不是每次重新描述。' },
+  '人工闸门': { c: 'eng', p: '流水线上必须由人确认才能继续的检查点。本页建议四个：剧本、角色资产、分镜关键帧、成片。', a: '越早发现问题越便宜：剧本阶段改一句话，成片阶段可能要重做十几个镜头。' },
+  '事实源': { c: 'eng', p: '所有步骤都以它为准的那份文件，例如剧本.md、分镜表、角色标准图。', a: '不要把“聊天记录里说过”当依据。每次让 AI 生成，都明确说“读取某某文件”。' },
+  'hash': { c: 'eng', p: '根据文件内容算出的一串“指纹”，内容一变指纹就变。', a: '用来判断素材有没有被改过、避免重复生成同一个东西。' },
+  'API': { c: 'eng', p: '程序之间调用服务的接口。用 API 生成视频就是让程序代替你在网页上点按钮。', a: 'API key 是调用凭证，也是计费凭证，等于钱包钥匙，不要发给别人或写进共享文件。' },
+  '闭源': { c: 'eng', p: '模型不公开，只能通过厂商的网页或 API 付费使用，如 Seedance、可灵。', a: '优点是开箱即用、效果好；缺点是按次付费、受厂商政策影响。' },
+  '开源': { c: 'eng', p: '模型权重公开，可以下载到自己的电脑或服务器上运行，如 HunyuanVideo、Wan。', a: '需要显卡和一定技术能力；商用前要看许可证。' },
+  '自部署': { c: 'eng', p: '把开源模型装在自己的机器或云服务器上运行，数据不出自己的环境。' },
+  'MVP': { c: 'eng', p: '最小可行产品：用最少的功能先跑通全流程，验证可行再扩展。', a: '对漫剧来说就是：1 个 IP、3 集、每集 60–90 秒。' },
+  'ComfyUI': { c: 'tool', p: '开源的节点连线式图像 / 视频生成工具，把模型、参考图、控制条件像积木一样连起来。', a: '功能强但上手门槛较高，属于 L3 自建路线。' },
+
+  'DeepSeek': { c: 'tool', p: '深度求索的大语言模型，中文好、价格低，适合批量写剧本和拆分镜。' },
+  'Claude': { c: 'tool', p: 'Anthropic 的大语言模型，擅长长文本理解和改写，适合处理整部原著。' },
+  'GPT': { c: 'tool', p: 'OpenAI 的大语言模型系列。' },
+  '豆包': { c: 'tool', p: '字节跳动的大语言模型，和同属火山引擎的 Seedream、Seedance 放在一起用比较方便。' },
+  '开源权重': { c: 'tool', p: '可以下载到本地运行的大语言模型（如通义千问 Qwen、DeepSeek 开源版），配合 vLLM、Ollama 等工具运行。' },
+  'DramaBuddy': { c: 'tool', p: '阅文集团的 AI 漫剧平台，主打网文拆书、分集改编、批量分镜。属于 L1 一站式平台。' },
+  '小云雀': { c: 'tool', p: '字节跳动的 AI 视频创作平台，包含剧本助手、角色资产画布、3D 导演台和视频生成。属于 L1 一站式平台。' },
+  'MovieAgent': { c: 'tool', p: '研究论文项目：用多个 AI 角色模拟导演、场景规划、镜头规划来自动拆分镜。偏研究，不是成熟产品。' },
+  'Seedream': { c: 'tool', p: '字节跳动的图像生成模型，中文理解好，支持多张参考图和图层拆分。可通过火山方舟 API 或即梦使用。' },
+  'FLUX': { c: 'tool', p: 'Black Forest Labs 的图像生成模型，擅长参考图编辑和多轮修改。' },
+  'Nano Banana': { c: 'tool', p: 'Google Gemini 图像模型的昵称，擅长对话式修图和多图融合。' },
+  'GPT Image': { c: 'tool', p: 'OpenAI 的图像生成与编辑模型，适合局部修图。' },
+  'Midjourney': { c: 'tool', p: '老牌 AI 绘图工具，风格表现强，主要在网页上手动使用，缺少公开的官方 API。' },
+  'Seedance': { c: 'tool', p: '字节跳动的视频生成模型，单次 4–30 秒，支持多参考和严格首尾帧。本页闭源方案首选。', a: '网页端可以在即梦里用，程序调用走火山方舟 API。' },
+  'MiniMax': { c: 'tool', p: 'MiniMax（海螺 AI）的视频生成模型 H3，支持首尾帧和图片、视频、音频混合参考。' },
+  'Vidu': { c: 'tool', p: '生数科技的视频生成模型，支持最多 15 张参考图，适合多角色同框。' },
+  'Veo': { c: 'tool', p: 'Google DeepMind 的视频生成模型，画面电影感强，可同时生成声音。' },
+  'Runway': { c: 'tool', p: '美国老牌 AI 视频公司，提供面向海外的视频生成 API。' },
+  'HunyuanVideo': { c: 'tool', p: '腾讯混元的开源视频生成模型，8.3B 参数，单张 RTX 4090 可以跑 480P。开源方案首选。' },
+  'Wan': { c: 'tool', p: '阿里通义万相的开源视频生成模型。效果好，但官方 720P 图生视频需要 80GB 显存。' },
+  'FLF2V': { c: 'tool', p: 'First-Last-Frame to Video，给首帧和尾帧生成中间视频。Wan2.1 有独立的开源首尾帧模型。' },
+  '可灵': { c: 'tool', p: '快手的视频生成产品（Kling），也提供对口型接口。Kling 4.0 已在产品端上线，API 尚未开放。' },
+  'MiniMax Speech': { c: 'tool', p: 'MiniMax 的语音合成服务，支持声音克隆和超长文本，适合中文长对白。' },
+  '豆包语音': { c: 'tool', p: '火山引擎的语音合成和声音复刻服务。' },
+  'ElevenLabs': { c: 'tool', p: '海外主流的 AI 配音服务，多语言效果好，适合做海外版。' },
+  'Hedra': { c: 'tool', p: '海外的说话视频工具：一张人物图 + 一段音频，生成角色开口说话的视频。' },
+  'CosyVoice': { c: 'tool', p: '阿里通义开源的语音合成模型，可本地部署。' },
+  'IndexTTS': { c: 'tool', p: '哔哩哔哩开源的可控语音合成模型，支持零样本声音克隆。' },
+  'LatentSync': { c: 'tool', p: '字节跳动开源的口型同步模型，推理至少需要 18GB 显存。' },
+  'MuseTalk': { c: 'tool', p: '腾讯音乐开源的实时口型同步模型。' },
+  '剪映': { c: 'tool', p: '字节跳动的视频剪辑软件（海外版 CapCut），自带自动字幕、文本朗读、模板。新手剪辑首选。', a: '素材库里的音乐不一定能商用，上线前逐首确认。' },
+  'Seed Audio': { c: 'tool', p: '字节跳动的 AI 音乐 / 音效生成模型。' },
+  'FFmpeg': { c: 'tool', p: '开源的命令行音视频处理工具，可批量拼接、转码、加字幕、统一音量。适合自动化，新手可以先不碰。' },
+  'Resolve': { c: 'tool', p: 'DaVinci Resolve，专业剪辑调色软件，有免费版。' },
+
+  'IP': { c: 'pub', p: '影视圈指原创作品及其版权，比如一部网文、一部漫画。“IP 改编”就是把小说改成剧。', a: '改编前必须拿到授权，不能直接拿别人的小说喂给 AI。' },
+  '改编权': { c: 'pub', p: '把原作品改编成新作品（如小说改成剧）的权利，属于原作者或版权方，需购买授权。' },
+  '信息网络传播权': { c: 'pub', p: '把作品放到网上供人观看的权利。改编授权和网络播放授权是两件事，都要谈清楚。' },
+  '显式标识': { c: 'pub', p: '观众能直接看到的“AI 生成”提示，例如片头的文字。', a: '国标要求：文字含“AI/人工智能”和“生成/合成”，字高不低于画面最短边的 5%，显示至少 2 秒。' },
+  '隐式标识': { c: 'pub', p: '写在视频文件元数据里、肉眼看不到的 AI 生成标记，供平台识别。不能删除或篡改。' },
+  'GB 45438': { c: 'pub', p: '国家标准 GB 45438-2025《人工智能生成合成内容标识方法》，规定了 AI 标识的具体做法。' },
+  '节目编号': { c: 'pub', p: '微短剧上线前的“准生证”。按投资规模等分为一、二、三类，分别走不同审核，没有编号不能播出。' },
+  '融像融声': { c: 'pub', p: '用 AI 合成某个真人的脸（融像）或声音（融声）。必须取得本人明确授权。' },
+  '投流': { c: 'pub', p: '花钱向平台购买流量，把作品推给更多人看。' },
+  '完播率': { c: 'pub', p: '看完这一集的观众占比，是短剧最核心的数据之一。' },
+  '下一集率': { c: 'pub', p: '看完本集后继续点下一集的观众占比，反映剧情是否“上头”。' },
+  '抖音红果': { c: 'pub', p: '抖音是字节的短视频平台；红果短剧是字节的免费短剧 App。具体分成规则需登录后台或看合同。' },
+  '快手短剧': { c: 'pub', p: '快手开放平台的短剧方案，要求相应资质和备案，播放器会显示备案号和 AI 标签。' }
+};
+
+const pop = document.querySelector('.pop');
+let pinned = null;
+
+function render(key) {
+  const g = G[key];
+  if (!g) return '';
+  return '<div class="pt">' + key + '<small>' + CATS[g.c] + '</small></div>' +
+         '<div>' + g.p + '</div>' + (g.a ? '<div class="pa">' + g.a + '</div>' : '');
+}
+function place(el) {
+  const r = el.getBoundingClientRect();
+  pop.style.left = '0px'; pop.style.top = '0px';
+  pop.classList.add('show');
+  const w = pop.offsetWidth, h = pop.offsetHeight, m = 8;
+  let left = Math.min(Math.max(m, r.left + r.width / 2 - w / 2), window.innerWidth - w - m);
+  let top = r.bottom + m;
+  if (top + h > window.innerHeight - m) top = Math.max(m, r.top - h - m);
+  pop.style.left = left + 'px'; pop.style.top = top + 'px';
+}
+function show(el) {
+  if (document.body.classList.contains('novice-off')) return;
+  const key = el.dataset.t || el.textContent.trim();
+  const html = render(key);
+  if (!html) return;
+  pop.innerHTML = html;
+  place(el);
+}
+function hide() { pop.classList.remove('show'); pinned = null; }
+
+const hoverable = window.matchMedia('(hover: hover)').matches;
+document.querySelectorAll('.t').forEach(el => {
+  el.setAttribute('tabindex', '0');
+  if (hoverable) {
+    el.addEventListener('mouseenter', () => { if (!pinned) show(el); });
+    el.addEventListener('mouseleave', () => { if (!pinned) pop.classList.remove('show'); });
+  }
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    if (pinned === el) { hide(); return; }
+    pinned = el; show(el);
   });
+  el.addEventListener('focus', () => show(el));
+  el.addEventListener('blur', () => { if (!pinned) pop.classList.remove('show'); });
+});
+document.addEventListener('click', e => { if (!pop.contains(e.target)) hide(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+window.addEventListener('scroll', () => { if (!pinned) pop.classList.remove('show'); else place(pinned); }, { passive: true });
+
+const fab = document.querySelector('.fab');
+fab.addEventListener('click', () => {
+  const off = document.body.classList.toggle('novice-off');
+  fab.textContent = '新手批注：' + (off ? '关' : '开');
+  fab.setAttribute('aria-pressed', String(!off));
+  hide();
+});
+
+document.querySelectorAll('.toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.toggle button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    document.body.dataset.mode = btn.dataset.mode;
+  });
+});
+
+document.querySelectorAll('.prompt button').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const text = btn.nextElementSibling.innerText;
+    try { await navigator.clipboard.writeText(text); }
+    catch (_) {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove();
+    }
+    btn.textContent = '已复制'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1500);
+  });
+});
+
+const gRoot = document.getElementById('glossary');
+Object.entries(CATS).forEach(([c, name]) => {
+  const items = Object.entries(G).filter(([k, g]) => g.c === c && k !== '虚线标注');
+  if (!items.length) return;
+  const sec = document.createElement('div');
+  sec.className = 'gcat';
+  sec.innerHTML = '<h3>' + name + '（' + items.length + '）</h3><div class="glist">' +
+    items.map(([k, g]) => '<div class="gitem" data-s="' + (k + g.p + (g.a || '')).toLowerCase().replace(/<[^>]+>/g, '') + '"><b>' + k + '</b>' + g.p +
+      (g.a ? '<div class="ga">' + g.a + '</div>' : '') + '</div>').join('') + '</div>';
+  gRoot.appendChild(sec);
+});
+document.querySelector('.gsearch').addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase();
+  gRoot.querySelectorAll('.gcat').forEach(sec => {
+    let any = false;
+    sec.querySelectorAll('.gitem').forEach(it => {
+      const hit = !q || it.dataset.s.includes(q);
+      it.style.display = hit ? '' : 'none';
+      any = any || hit;
+    });
+    sec.style.display = any ? '' : 'none';
+  });
+});
+
+const missing = [...new Set([...document.querySelectorAll('.t')].map(el => el.dataset.t || el.textContent.trim()))].filter(k => !G[k]);
+if (missing.length) console.warn('术语缺少解释：', missing);
 </script>
 </body>
 </html>
